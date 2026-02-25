@@ -2,79 +2,88 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>文句重組大冒險</title>
     <style>
         :root {
-            --game-blue: #29b6f6;
-            --game-teal: #26a69a;
-            --game-gold: #ffca28;
+            --game-blue: #01579b;
+            --game-light-blue: #e3f2fd;
+            --game-accent: #ffb300;
             --game-coral: #ef5350;
-            --game-paper: #fff9c4;
-            --ui-bg: rgba(255, 255, 255, 0.9);
+            --ui-bg: rgba(255, 255, 255, 0.95);
         }
 
-        body { 
-            margin: 0; 
+        html, body { 
+            width: 100%; height: 100%; 
+            margin: 0; padding: 0; 
             overflow: hidden; 
-            background: #80cbc4; /* 遊戲底色 */
+            background: #f0f4f8; /* 恢復為清爽的淺藍灰色背景 */
             font-family: "Microsoft JhengHei", "Heiti TC", sans-serif; 
             touch-action: none; 
         }
 
-        /* 遊戲背景裝飾 */
+        canvas { 
+            display: block; 
+            width: 100vw; height: 100vh; 
+            background: #fff; 
+        }
+
         #bg-pattern {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background-image: radial-gradient(#4db6ac 1px, transparent 1px);
-            background-size: 30px 30px;
+            background-image: radial-gradient(#d1d9e6 1.5px, transparent 1.5px);
+            background-size: 40px 40px;
             pointer-events: none;
-            z-index: -1;
+            z-index: 1;
         }
 
         /* UI 頂部控制欄 */
         #game-header {
             position: absolute;
-            top: 20px; left: 20px; right: 20px;
+            top: 20px; left: 0; width: 100%;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 0 30px;
+            box-sizing: border-box;
             pointer-events: none;
             z-index: 10;
         }
 
         #lesson-title-display {
-            font-size: 28px;
+            font-size: clamp(18px, 3vw, 28px);
             font-weight: 900;
-            color: #004d40;
+            color: var(--game-blue);
             background: var(--ui-bg);
-            padding: 10px 30px;
+            padding: 10px 25px;
             border-radius: 50px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            border: 3px solid #004d40;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+            border: 3px solid var(--game-blue);
+            pointer-events: none;
         }
 
         .btn-group {
-            display: flex; gap: 12px;
+            display: flex; gap: 10px;
             pointer-events: auto;
         }
 
         button {
-            padding: 12px 24px;
+            padding: clamp(8px, 1.5vw, 15px) clamp(15px, 2.5vw, 25px);
             cursor: pointer;
             border-radius: 12px;
             border: none;
             background: #fff;
             color: #333;
-            font-size: 16px;
+            font-size: clamp(14px, 1.8vw, 18px);
             font-weight: bold;
-            box-shadow: 0 4px 0 #ccc;
+            box-shadow: 0 4px 0 #cfd8dc;
             transition: all 0.1s;
             display: flex; align-items: center; gap: 8px;
+            white-space: nowrap;
         }
 
-        button:active { transform: translateY(4px); box-shadow: 0 0 0 #ccc; }
-        button.primary { background: var(--game-gold); color: #5f4b00; box-shadow: 0 4px 0 #d4a017; }
+        button:active { transform: translateY(4px); box-shadow: 0 0 0 #cfd8dc; }
+        button.primary { background: var(--game-blue); color: white; box-shadow: 0 4px 0 #013b69; }
         button.danger { background: var(--game-coral); color: white; box-shadow: 0 4px 0 #b71c1c; }
 
         /* 彈窗設計 */
@@ -83,20 +92,20 @@
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             background: #fff;
-            padding: 30px;
+            padding: 5vh;
             border-radius: 25px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
             z-index: 1000;
             display: none;
             pointer-events: auto;
-            border: 8px solid var(--game-teal);
+            border: 8px solid var(--game-blue);
+            width: 85vw; max-width: 900px; height: 80vh;
         }
 
-        #editor-modal { width: 90%; max-width: 850px; height: 85vh; flex-direction: row; }
-        .modal-content { display: flex; width: 100%; height: 100%; gap: 25px; }
+        .modal-content { display: flex; width: 100%; height: 100%; gap: 20px; flex-direction: row; }
         
         .lesson-sidebar {
-            width: 250px;
+            width: 30%;
             border-right: 2px dashed #eee;
             padding-right: 15px;
             overflow-y: auto;
@@ -105,16 +114,17 @@
         .lesson-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
         
         .sidebar-item {
-            padding: 15px;
-            background: #f1f8e9;
-            border-radius: 12px;
-            margin-bottom: 10px;
+            padding: 12px;
+            background: #f5f9ff;
+            border-radius: 10px;
+            margin-bottom: 8px;
             cursor: pointer;
             border: 2px solid transparent;
             font-weight: bold;
+            font-size: 14px;
             display: flex; justify-content: space-between; align-items: center;
         }
-        .sidebar-item.active { border-color: var(--game-teal); background: #c8e6c9; color: #2e7d32; }
+        .sidebar-item.active { border-color: var(--game-blue); background: #e3f2fd; color: var(--game-blue); }
 
         input, textarea {
             width: 100%; padding: 12px; margin-top: 5px;
@@ -124,14 +134,20 @@
 
         .overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); display: none; z-index: 900;
-            backdrop-filter: blur(4px);
+            background: rgba(0,0,0,0.5); display: none; z-index: 900;
+            backdrop-filter: blur(5px);
         }
 
         #toast {
             position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
-            background: #333; color: #fff; padding: 15px 40px;
+            background: rgba(0,0,0,0.8); color: #fff; padding: 15px 40px;
             border-radius: 50px; display: none; z-index: 2000; font-weight: bold;
+        }
+
+        @media (max-width: 600px) {
+            .modal-content { flex-direction: column; }
+            .lesson-sidebar { width: 100%; border-right: none; border-bottom: 2px dashed #eee; height: 30%; margin-bottom: 10px; }
+            #game-header { padding: 0 10px; top: 10px; }
         }
     </style>
 </head>
@@ -139,10 +155,10 @@
 
 <div id="bg-pattern"></div>
 <div id="game-header">
-    <div id="lesson-title-display">文句重組大冒險</div>
+    <div id="lesson-title-display">載入中...</div>
     <div class="btn-group">
-        <button class="primary" onclick="openEditor()">📝 課程管理</button>
-        <button onclick="resetPositions()">🔄 重置方塊</button>
+        <button class="primary" onclick="openEditor()">📝 管理</button>
+        <button onclick="resetPositions()">🔄 重置</button>
         <button class="danger" onclick="showConfirmReset()">💥 初始化</button>
     </div>
 </div>
@@ -150,36 +166,31 @@
 <div id="toast">訊息提示</div>
 <div class="overlay" id="overlay" onclick="closeAllModals()"></div>
 
-<!-- 課程管理彈窗 -->
 <div id="editor-modal" class="modal">
     <div class="modal-content">
         <div class="lesson-sidebar">
-            <h3 style="margin-top:0;">📚 我的課文庫</h3>
+            <h3 style="margin-top:0; color: var(--game-blue);">📚 課程庫</h3>
             <div id="lesson-list"></div>
-            <button onclick="createNewLessonTemplate()" style="margin-top: 15px; width: 100%; background: var(--game-teal); color: white; box-shadow: 0 4px 0 #00796b;">+ 新增課次</button>
+            <button onclick="createNewLessonTemplate()" style="margin-top: 10px; width: 100%; background: var(--game-blue); color: white;">+ 新增課程</button>
         </div>
         <div class="lesson-main">
-            <h2 style="margin-top:0;">編輯課文內容</h2>
+            <h2 style="margin-top:0; color: var(--game-blue);">編輯課文內容</h2>
             <div style="flex: 1; overflow-y: auto; padding-right: 10px;">
-                <label>📍 課文題目</label>
-                <input type="text" id="input-title">
+                <label>📍 題目</label><input type="text" id="input-title">
                 <br><br>
-                <label>🏷️ 上方標籤 (逗號隔開)</label>
-                <input type="text" id="input-labels">
+                <label>🏷️ 標籤 (逗號隔開)</label><input type="text" id="input-labels">
                 <br><br>
-                <label>💬 課文句子 (一行一句)</label>
-                <textarea id="input-sentences"></textarea>
+                <label>💬 句子 (一行一句)</label><textarea id="input-sentences"></textarea>
             </div>
-            <div style="display: flex; gap: 10px; margin-top: 20px;">
-                <button class="primary" style="flex: 1;" onclick="saveLesson()">💾 儲存並開始挑戰</button>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button class="primary" style="flex: 1;" onclick="saveLesson()">💾 儲存並挑戰</button>
                 <button style="flex: 1;" onclick="closeEditor()">返回</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- 確認彈窗 -->
-<div id="confirm-modal" class="modal" style="max-width: 350px; text-align: center;">
+<div id="confirm-modal" class="modal" style="max-width: 350px; height: auto; text-align: center;">
     <h2>確定要重置嗎？</h2>
     <p>這會清空所有的課次與進度喔！</p>
     <div style="display: flex; gap: 10px; margin-top: 20px;">
@@ -192,263 +203,176 @@
 
 <script>
 /**
- * 音效管理器：利用 Web Audio API 即時合成聲音
+ * 音效管理器
  */
 const Sound = {
     ctx: null,
-    init() {
-        if (!this.ctx) {
-            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-    },
+    init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
     play(type) {
         this.init();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-
+        osc.connect(gain); gain.connect(this.ctx.destination);
         const now = this.ctx.currentTime;
-
-        switch(type) {
-            case 'drag': // 抓取：短促高音
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(600, now);
-                osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
-                gain.gain.setValueAtTime(0.1, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
-                osc.start(now);
-                osc.stop(now + 0.05);
-                break;
-            case 'snap': // 吸附：清脆叮聲
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(500, now);
-                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
-                gain.gain.setValueAtTime(0.2, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-                osc.start(now);
-                osc.stop(now + 0.2);
-                break;
-            case 'click': // 按鈕：木頭敲擊聲
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(150, now);
-                gain.gain.setValueAtTime(0.1, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-                osc.start(now);
-                osc.stop(now + 0.1);
-                break;
-            case 'reset': // 初始化：下降音
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(400, now);
-                osc.frequency.linearRampToValueAtTime(100, now + 0.4);
-                gain.gain.setValueAtTime(0.1, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-                osc.start(now);
-                osc.stop(now + 0.4);
-                break;
+        osc.start(now);
+        if (type === 'drag') {
+            osc.frequency.setValueAtTime(600, now); gain.gain.setValueAtTime(0.05, now);
+            osc.stop(now + 0.05);
+        } else if (type === 'snap') {
+            osc.frequency.setValueAtTime(800, now); gain.gain.setValueAtTime(0.1, now);
+            osc.stop(now + 0.15);
+        } else if (type === 'click') {
+            osc.frequency.setValueAtTime(200, now); gain.gain.setValueAtTime(0.05, now);
+            osc.stop(now + 0.1);
+        } else if (type === 'reset') {
+            osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+            osc.stop(now + 0.3);
         }
     }
 };
 
 const DEFAULT_LESSON = {
     id: "default-001",
-    title: "朱自清《背影》",
-    labels: ["背景", "發生", "發展", "結局"],
-    sentences: [
-        "我與父親不相見已二餘年了",
-        "我最不能忘記的是他的背影",
-        "那年冬天，祖母死了",
-        "父親的差使也交卸了",
-        "正是禍不單行的日子"
-    ]
+    title: "歐陽脩《醉翁亭記》",
+    labels: ["自然之美", "活動之美", "人情之美"],
+    sentences: ["環滁皆山也。其西南諸峰，林壑尤美。", "醉翁之意不在酒，在乎山水之間也。", "太守與客來飲於此，飲少輒醉", "山水之樂，得之心而寓之酒也。"]
 };
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-let library = [];
-let lesson = { ...DEFAULT_LESSON };
-let currentLessonId = "";
-let blocks = [];
-let labels = [];
-let particles = [];
-
-let draggingBlock = null;
-let offset = { x: 0, y: 0 };
+let library = [], lesson = { ...DEFAULT_LESSON }, currentLessonId = "";
+let blocks = [], labels = [], particles = [];
+let draggingBlock = null, offset = { x: 0, y: 0 };
+let dpr = window.devicePixelRatio || 1;
 
 function init() {
-    const savedLib = localStorage.getItem('lesson_library_v2');
-    if (savedLib) {
-        library = JSON.parse(savedLib);
-    } else {
-        library = [DEFAULT_LESSON];
-        saveLibrary();
-    }
-
-    const activeId = localStorage.getItem('active_lesson_id_v2');
+    const savedLib = localStorage.getItem('lesson_library_v3');
+    library = savedLib ? JSON.parse(savedLib) : [DEFAULT_LESSON];
+    const activeId = localStorage.getItem('active_lesson_id_v3');
     lesson = library.find(l => l.id === activeId) || library[0];
     currentLessonId = lesson.id;
-
     document.getElementById('lesson-title-display').innerText = lesson.title;
     
     resize();
     initElements();
-    
-    if (!window.animationRunning) {
-        window.animationRunning = true;
-        animate();
-    }
+    if (!window.animationRunning) { window.animationRunning = true; animate(); }
 }
 
 function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    ctx.scale(dpr, dpr);
     initLabels();
 }
 
 function initLabels() {
+    const width = window.innerWidth;
+    const count = lesson.labels.length;
     labels = lesson.labels.map((text, i) => ({
         text,
-        x: (canvas.width / (lesson.labels.length + 1)) * (i + 1),
-        y: 180,
-        w: 120,
-        h: 50
+        x: (width / (count + 1)) * (i + 1),
+        y: 200,
+        w: Math.min(width * 0.2, 180),
+        h: 60
     }));
 }
 
 function initElements() {
-    const savedPos = localStorage.getItem(`pos_v2_${currentLessonId}`);
+    const savedPos = localStorage.getItem(`pos_v3_${currentLessonId}`);
     const savedBlocks = savedPos ? JSON.parse(savedPos) : null;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
 
     blocks = lesson.sentences.map((text, i) => {
         if (savedBlocks && savedBlocks[i] && savedBlocks[i].text === text) {
             return { ...savedBlocks[i], targetX: savedBlocks[i].x, targetY: savedBlocks[i].y, scale: 1 };
         }
-        ctx.font = "bold 18px Sans-serif";
-        const w = ctx.measureText(text).width + 60;
-        const x = 100 + Math.random() * (canvas.width - 200);
-        const y = canvas.height * 0.6 + Math.random() * (canvas.height * 0.3);
-        return { text, x, y, targetX: x, targetY: y, w, h: 60, scale: 1, id: i };
+        ctx.font = "bold 20px Sans-serif";
+        const w = Math.min(ctx.measureText(text).width + 60, width * 0.8);
+        const x = 100 + Math.random() * (width - 200);
+        const y = height * 0.6 + Math.random() * (height * 0.25);
+        return { text, x, y, targetX: x, targetY: y, w, h: 70, scale: 1, id: i };
     });
-}
-
-class Particle {
-    constructor(x, y, color) {
-        this.x = x; this.y = y;
-        this.vx = (Math.random() - 0.5) * 10;
-        this.vy = (Math.random() - 0.5) * 10;
-        this.life = 1.0;
-        this.color = color;
-    }
-    update() {
-        this.x += this.vx; this.y += this.vy;
-        this.life -= 0.02;
-    }
-    draw() {
-        ctx.globalAlpha = this.life;
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, 4, 0, Math.PI*2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-    }
-}
-
-function createBurst(x, y, color) {
-    for(let i=0; i<15; i++) particles.push(new Particle(x, y, color));
 }
 
 function animate() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    ctx.clearRect(0, 0, width, height);
 
-    ctx.fillStyle = "rgba(0,0,0,0.05)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height * 0.45);
+    // 上方放置區背景
+    ctx.fillStyle = "rgba(1, 87, 155, 0.04)";
+    ctx.fillRect(0, 0, width, height * 0.48);
 
+    // 繪製標籤 (經典藍風格)
     labels.forEach(l => {
-        ctx.fillStyle = "#00796b";
+        ctx.fillStyle = "#0d47a1";
         roundRect(ctx, l.x - l.w/2, l.y - l.h/2 + 5, l.w, l.h, 15, true, false); 
-        ctx.fillStyle = "#4db6ac";
+        ctx.fillStyle = "#e3f2fd";
         roundRect(ctx, l.x - l.w/2, l.y - l.h/2, l.w, l.h, 15, true, true);
-        ctx.fillStyle = "#fff";
-        ctx.textAlign = "center";
-        ctx.font = "bold 20px Sans-serif";
+        ctx.fillStyle = "#1565c0"; ctx.textAlign = "center";
+        ctx.font = `bold ${Math.max(16, width*0.02)}px Sans-serif`;
         ctx.fillText(l.text, l.x, l.y + 8);
         
-        ctx.setLineDash([5, 5]);
-        ctx.strokeStyle = "rgba(0,0,0,0.1)";
-        ctx.strokeRect(l.x - 50, l.y + 50, 100, 120);
-        ctx.setLineDash([]);
+        ctx.setLineDash([5, 5]); ctx.strokeStyle = "rgba(1, 87, 155, 0.1)";
+        ctx.strokeRect(l.x - 50, l.y + 60, 100, 150); ctx.setLineDash([]);
     });
 
+    // 繪製方塊
     blocks.forEach(b => {
         if (b !== draggingBlock) {
-            b.x += (b.targetX - b.x) * 0.2;
-            b.y += (b.targetY - b.y) * 0.2;
+            b.x += (b.targetX - b.x) * 0.2; b.y += (b.targetY - b.y) * 0.2;
             b.scale += (1 - b.scale) * 0.2;
-        } else {
-            b.scale += (1.1 - b.scale) * 0.2;
-        }
+        } else { b.scale += (1.08 - b.scale) * 0.2; }
 
-        const isDragging = (b === draggingBlock);
         ctx.save();
-        ctx.translate(b.x, b.y);
-        ctx.scale(b.scale, b.scale);
-
-        ctx.shadowBlur = isDragging ? 15 : 6;
-        ctx.shadowOffsetY = isDragging ? 8 : 2;
-        ctx.shadowOffsetX = 0;
-        ctx.shadowColor = "rgba(0,0,0,0.15)";
+        ctx.translate(b.x, b.y); ctx.scale(b.scale, b.scale);
+        ctx.shadowBlur = b === draggingBlock ? 15 : 6;
+        ctx.shadowOffsetY = b === draggingBlock ? 10 : 2;
+        ctx.shadowColor = "rgba(0,0,0,0.1)";
+        ctx.fillStyle = "#ffffff";
+        roundRect(ctx, -b.w/2, -b.h/2, b.w, b.h, 15, true, true);
         
-        let grad = ctx.createLinearGradient(-b.w/2, -b.h/2, b.w/2, b.h/2);
-        grad.addColorStop(0, "#ffffff");
-        grad.addColorStop(1, "#f5f5f5");
-        ctx.fillStyle = grad;
+        ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; ctx.shadowColor = "transparent";
+        ctx.strokeStyle = b === draggingBlock ? "#ffb300" : "#d1d9e6";
+        ctx.lineWidth = b === draggingBlock ? 4 : 2; ctx.stroke();
         
-        roundRect(ctx, -b.w/2, -b.h/2, b.w, b.h, 12, true, true);
-        
-        ctx.shadowBlur = 0;
-        ctx.shadowOffsetY = 0;
-        ctx.shadowOffsetX = 0;
-        ctx.shadowColor = "transparent";
-
-        ctx.strokeStyle = isDragging ? "#ffca28" : "#cfd8dc";
-        ctx.lineWidth = isDragging ? 4 : 2;
-        ctx.stroke();
-
-        ctx.fillStyle = "#263238"; 
-        ctx.textAlign = "center";
-        ctx.font = "bold 18px Sans-serif";
-        ctx.fillText(b.text, 0, 7);
+        ctx.fillStyle = "#263238"; ctx.textAlign = "center";
+        ctx.font = `bold ${Math.max(16, width*0.018)}px Sans-serif`;
+        ctx.fillText(b.text, 0, 8);
         ctx.restore();
     });
 
-    particles = particles.filter(p => p.life > 0);
-    particles.forEach(p => { p.update(); p.draw(); });
+    particles = particles.filter(p => (p.life -= 0.02) > 0);
+    particles.forEach(p => {
+        p.x += p.vx; p.y += p.vy;
+        ctx.globalAlpha = p.life; ctx.fillStyle = p.color;
+        ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI*2); ctx.fill();
+        ctx.globalAlpha = 1;
+    });
 
     requestAnimationFrame(animate);
 }
 
-function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
-    ctx.beginPath();
-    ctx.moveTo(x + radius, y);
-    ctx.lineTo(x + width - radius, y);
-    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-    ctx.lineTo(x + width, y + height - radius);
-    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-    ctx.lineTo(x + radius, y + height);
-    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-    ctx.lineTo(x, y + radius);
-    ctx.quadraticCurveTo(x, y, x + radius, y);
-    ctx.closePath();
-    if (fill) ctx.fill();
-    if (stroke) ctx.stroke();
+function reorganizeStacks() {
+    labels.forEach(l => {
+        const atLabel = blocks.filter(b => Math.abs(b.targetX - l.x) < 5 && b.targetY < window.innerHeight * 0.5);
+        atLabel.sort((a, b) => a.y - b.y);
+        atLabel.forEach((b, index) => {
+            b.targetX = l.x;
+            b.targetY = l.y + 100 + (index * 85);
+        });
+    });
 }
 
 function getPointerPos(e) {
-    const rect = canvas.getBoundingClientRect();
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    return { x: clientX - rect.left, y: clientY - rect.top };
+    return { x: clientX, y: clientY };
 }
 
 function handleStart(e) {
@@ -456,13 +380,9 @@ function handleStart(e) {
     for (let i = blocks.length - 1; i >= 0; i--) {
         const b = blocks[i];
         if (x > b.x - b.w/2 && x < b.x + b.w/2 && y > b.y - b.h/2 && y < b.y + b.h/2) {
-            draggingBlock = b;
-            offset.x = x - b.x;
-            offset.y = y - b.y;
-            blocks.splice(i, 1);
-            blocks.push(draggingBlock); 
-            Sound.play('drag'); // 播放抓取音效
-            break;
+            draggingBlock = b; offset.x = x - b.x; offset.y = y - b.y;
+            blocks.splice(i, 1); blocks.push(draggingBlock);
+            Sound.play('drag'); break;
         }
     }
 }
@@ -470,136 +390,72 @@ function handleStart(e) {
 function handleMove(e) {
     if (!draggingBlock) return;
     const { x, y } = getPointerPos(e);
-    draggingBlock.x = x - offset.x;
-    draggingBlock.y = y - offset.y;
-    draggingBlock.targetX = draggingBlock.x;
-    draggingBlock.targetY = draggingBlock.y;
+    draggingBlock.x = x - offset.x; draggingBlock.y = y - offset.y;
+    draggingBlock.targetX = draggingBlock.x; draggingBlock.targetY = draggingBlock.y;
 }
 
 function handleEnd() {
     if (!draggingBlock) return;
     labels.forEach(l => {
-        const dist = Math.sqrt((draggingBlock.x - l.x)**2 + (draggingBlock.y - (l.y + 80))**2);
-        if (dist < 80) {
+        const dist = Math.sqrt((draggingBlock.x - l.x)**2 + (draggingBlock.y - (l.y + 100))**2);
+        if (dist < 100 || (Math.abs(draggingBlock.x - l.x) < 80 && draggingBlock.y < window.innerHeight * 0.5)) {
             draggingBlock.targetX = l.x;
-            draggingBlock.targetY = l.y + 80;
-            createBurst(l.x, l.y + 80, "#ffca28"); 
-            Sound.play('snap'); // 播放吸附音效
+            for(let i=0; i<10; i++) particles.push({ x: l.x, y: draggingBlock.y, vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10, life: 1, color: "#1e88e5" });
+            Sound.play('snap');
         }
     });
-    draggingBlock = null;
-    localStorage.setItem(`pos_v2_${currentLessonId}`, JSON.stringify(blocks));
+    reorganizeStacks(); draggingBlock = null;
+    localStorage.setItem(`pos_v3_${currentLessonId}`, JSON.stringify(blocks));
 }
 
-function openEditor() {
-    Sound.play('click');
-    renderLessonList();
-    loadLessonToFields(currentLessonId);
-    document.getElementById('editor-modal').style.display = 'flex';
-    document.getElementById('overlay').style.display = 'block';
-}
-
-function closeEditor() {
-    Sound.play('click');
-    document.getElementById('editor-modal').style.display = 'none';
-    document.getElementById('overlay').style.display = 'none';
-}
-
+function openEditor() { Sound.play('click'); renderLessonList(); loadLessonToFields(currentLessonId); document.getElementById('editor-modal').style.display = 'flex'; document.getElementById('overlay').style.display = 'block'; }
+function closeEditor() { Sound.play('click'); document.getElementById('editor-modal').style.display = 'none'; document.getElementById('overlay').style.display = 'none'; }
 function renderLessonList() {
-    const listDiv = document.getElementById('lesson-list');
-    listDiv.innerHTML = "";
+    const listDiv = document.getElementById('lesson-list'); listDiv.innerHTML = "";
     library.forEach(l => {
         const item = document.createElement('div');
         item.className = `sidebar-item ${l.id === currentLessonId ? 'active' : ''}`;
-        item.innerHTML = `<span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:160px;">${l.title}</span><span onclick="deleteLesson(event, '${l.id}')">🗑️</span>`;
+        item.innerHTML = `<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${l.title}</span><span onclick="deleteLesson(event, '${l.id}')">🗑️</span>`;
         item.onclick = () => { Sound.play('click'); loadLessonToFields(l.id); };
         listDiv.appendChild(item);
     });
 }
-
 function loadLessonToFields(id) {
-    const target = library.find(l => l.id === id);
-    if (!target) return;
-    currentLessonId = id;
-    document.getElementById('input-title').value = target.title;
+    const target = library.find(l => l.id === id); if (!target) return;
+    currentLessonId = id; document.getElementById('input-title').value = target.title;
     document.getElementById('input-labels').value = target.labels.join(',');
     document.getElementById('input-sentences').value = target.sentences.join('\n');
     renderLessonList();
 }
-
-function createNewLessonTemplate() {
-    Sound.play('click');
-    const newId = 'L' + Date.now();
-    library.push({ id: newId, title: "新課次名稱", labels: ["標籤1"], sentences: ["請輸入句子"] });
-    currentLessonId = newId;
-    saveLibrary();
-    openEditor();
-}
-
 function saveLesson() {
-    Sound.play('click');
     const idx = library.findIndex(l => l.id === currentLessonId);
     if (idx !== -1) {
-        library[idx].title = document.getElementById('input-title').value.trim() || "未命名";
+        library[idx].title = document.getElementById('input-title').value.trim();
         library[idx].labels = document.getElementById('input-labels').value.split(/[，,]/).map(s=>s.trim()).filter(s=>s);
         library[idx].sentences = document.getElementById('input-sentences').value.split('\n').map(s=>s.trim()).filter(s=>s);
-        saveLibrary();
-        localStorage.setItem('active_lesson_id_v2', currentLessonId);
-        localStorage.removeItem(`pos_v2_${currentLessonId}`);
-        init();
-        closeEditor();
-        showToast("存檔成功，挑戰開始！");
+        localStorage.setItem('lesson_library_v3', JSON.stringify(library));
+        localStorage.setItem('active_lesson_id_v3', currentLessonId);
+        localStorage.removeItem(`pos_v3_${currentLessonId}`);
+        init(); closeEditor(); showToast("課程已更新！");
     }
 }
-
-function deleteLesson(e, id) {
-    e.stopPropagation();
-    Sound.play('reset');
-    if (library.length <= 1) return alert("至少要保留一個課次喔！");
-    library = library.filter(l => l.id !== id);
-    if (currentLessonId === id) currentLessonId = library[0].id;
-    saveLibrary();
-    renderLessonList();
+function createNewLessonTemplate() {
+    const newId = 'L' + Date.now();
+    library.push({ id: newId, title: "新課次", labels: ["標籤"], sentences: ["新句子"] });
+    currentLessonId = newId; localStorage.setItem('lesson_library_v3', JSON.stringify(library));
+    openEditor();
 }
+function deleteLesson(e, id) { e.stopPropagation(); if (library.length <= 1) return; library = library.filter(l => l.id !== id); if (currentLessonId === id) currentLessonId = library[0].id; localStorage.setItem('lesson_library_v3', JSON.stringify(library)); renderLessonList(); }
+function resetPositions() { Sound.play('reset'); localStorage.removeItem(`pos_v3_${currentLessonId}`); initElements(); showToast("位置已重置"); }
+function showConfirmReset() { document.getElementById('confirm-modal').style.display = 'block'; document.getElementById('overlay').style.display = 'block'; }
+function clearAllData() { localStorage.clear(); location.reload(); }
+function closeAllModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); document.getElementById('overlay').style.display = 'none'; }
+function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2000); }
+function roundRect(ctx, x, y, width, height, radius, fill, stroke) { ctx.beginPath(); ctx.moveTo(x + radius, y); ctx.lineTo(x + width - radius, y); ctx.quadraticCurveTo(x + width, y, x + width, y + radius); ctx.lineTo(x + width, y + height - radius); ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height); ctx.lineTo(x + radius, y + height); ctx.quadraticCurveTo(x, y + height, x, y + height - radius); ctx.lineTo(x, y + radius); ctx.quadraticCurveTo(x, y, x + radius, y); ctx.closePath(); if (fill) ctx.fill(); if (stroke) ctx.stroke(); }
 
-function saveLibrary() { localStorage.setItem('lesson_library_v2', JSON.stringify(library)); }
-
-function showToast(msg) {
-    const t = document.getElementById('toast'); t.innerText = msg; t.style.display = 'block';
-    setTimeout(() => t.style.display = 'none', 2000);
-}
-
-function resetPositions() {
-    Sound.play('reset');
-    localStorage.removeItem(`pos_v2_${currentLessonId}`);
-    initElements();
-    showToast("方塊已重新排好");
-}
-
-function showConfirmReset() {
-    Sound.play('click');
-    document.getElementById('confirm-modal').style.display = 'block';
-    document.getElementById('overlay').style.display = 'block';
-}
-
-function clearAllData() {
-    Sound.play('reset');
-    localStorage.clear();
-    location.reload();
-}
-
-function closeAllModals() {
-    document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
-    document.getElementById('overlay').style.display = 'none';
-}
-
-window.addEventListener('mousedown', handleStart);
-window.addEventListener('mousemove', handleMove);
-window.addEventListener('mouseup', handleEnd);
-window.addEventListener('touchstart', handleStart, { passive: false });
-window.addEventListener('touchmove', handleMove, { passive: false });
-window.addEventListener('touchend', handleEnd);
-window.addEventListener('resize', resize);
+window.addEventListener('mousedown', handleStart); window.addEventListener('mousemove', handleMove); window.addEventListener('mouseup', handleEnd);
+window.addEventListener('touchstart', handleStart, { passive: false }); window.addEventListener('touchmove', handleMove, { passive: false }); window.addEventListener('touchend', handleEnd);
+window.addEventListener('resize', () => { resize(); initElements(); });
 
 init();
 </script>
